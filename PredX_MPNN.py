@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import tftraj.rmsd as rmsd
 import copy
 from tensorboardX import SummaryWriter
 from tf_rmsd import tf_centroid, tf_centroid_masked, tf_kabsch_rmsd_masked, tf_kabsch_rmsd
@@ -196,7 +195,6 @@ class Model(object):
                     pkl.dump(save_dict_tt, \
                         open(os.path.join(savepred_path, 'mol_{}_neuralnet.p'.format(tt+start_)), 'wb'))
 
-        print ("val scores: mean is {} , std is {}".format(np.mean(valscores_mean), np.mean(valscores_std)))
         if savepred_path != None:
             if not savepermol:
                 print ("saving neural net predictions into {}".format(savepred_path))
@@ -271,7 +269,8 @@ class Model(object):
 
         # training
         print('::: start training')
-        num_epochs = 2500
+        # num_epochs = 2500
+        num_epochs = 1000
         valaggr_mean = np.zeros(num_epochs)
         valaggr_std = np.zeros(num_epochs)
 
@@ -425,11 +424,11 @@ class Model(object):
         return set
 
 
-    def _draw_sample(self, mu, lsgms, T=1):
+    def _draw_sample(self, mu, lsgms, T=1): #reparametrization trick - makes backpropogation possible
 
-        epsilon = tf.random_normal(tf.shape(lsgms), 0., 1.)
-        sample = tf.multiply(tf.exp(0.5 * lsgms) * T, epsilon)
-        sample = tf.add(mu, sample)
+        epsilon = tf.random_normal(tf.shape(lsgms), 0., 1.) # sampling epsilon from N(0,I)
+        sample = tf.multiply(tf.exp(0.5 * lsgms) * T, epsilon) #
+        sample = tf.add(mu, sample) # z = mu + standardDev^1/2 * epsilon
         sample = tf.multiply(sample, self.mask)
 
         return sample
@@ -506,7 +505,7 @@ class Model(object):
 
 
     def _g_nn(self, inp, node, outdim, name='', reuse=True, mask=None): #[batch_size, n_max, -]
-
+    # the graph convolutional NN that generates the mu and lsgms for sampling of z in next step
         if mask is None: mask = self.mask
         with tf.variable_scope('g_nn'+name, reuse=reuse):
 
@@ -547,7 +546,9 @@ class Model(object):
 
 
     def _KLD(self, mu0, lsgm0, mu1, lsgm1):# [batch_size, n_max, dim_h]
-
+        # calculating KLD in terms of mu and lsgm. mu0 and lsgm0 are for Q distribution - encoding.
+        # the others are for decoding. To calculate the term D[Q(z|X)‖P(z)]
+        # see paper(https://arxiv.org/pdf/1606.05908.pdf) for exact equation - eq 6
         var0 = tf.exp(lsgm0)
         var1 = tf.exp(lsgm1)
         a = tf.div( var0 + 1e-5, var1 + 1e-5)
@@ -560,6 +561,7 @@ class Model(object):
 
 
     def _KLD_zero(self, mu0, lsgm0):# [batch_size, n_max, dim_h]
+        # P(z) has mean 0 and stdDev I. In that case see eq 7 in paper https://arxiv.org/pdf/1606.05908.pdf
 
         a = tf.exp(lsgm0) + tf.square(mu0)
         b = 1 + lsgm0

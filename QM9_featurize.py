@@ -4,7 +4,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
-import pickle as pkl
+# import pickle as pkl
+import dill as pkl
 import copy
 import sparse
 import argparse
@@ -40,7 +41,7 @@ def atomFeatures(a, ri_a):
 
         return onehot
 
-    v1 = to_onehot(a.GetSymbol(), ['C','N','O','F'], 1)
+    v1 = to_onehot(a.GetSymbol(), ['C','N','O','F','S','Cl'], 1)
     v2 = to_onehot(str(a.GetHybridization()), ['SP','SP2','SP3'], 1)
 
     v3 = [a.GetAtomicNum(), a.GetDegree(), a.GetFormalCharge(), a.GetTotalNumHs(), atom.GetImplicitValence(), a.GetNumRadicalElectrons(), int(a.GetIsAromatic())]
@@ -74,10 +75,15 @@ def bondFeatures(bbs, samering, shortpath):
     return np.concatenate([v1,v2,v3], axis=0)
 
 
-data='QM9'
+data='Mine'
+n_max = 28
+atom_dim=24
+
+# data='QM9'
+#n_max=9
+# atom_dim=22
+
 n_min=2
-n_max=9
-atom_dim=22
 edge_dim=10
 virtual_node = args.virtual_node
 if virtual_node:
@@ -189,9 +195,9 @@ print([D1.shape, D2.shape, D3.shape, D4.shape, D5.shape])
 print([np.sum(np.isnan(D1)), np.sum(np.isnan(D2)), np.sum(np.isnan(D3)), np.sum(np.isnan(D4))])
 print([D1.nbytes, D3.nbytes])
 
-D1 = sparse.COO.from_numpy(D1)
-D2 = sparse.COO.from_numpy(D2)
-D3 = sparse.COO.from_numpy(D3)
+# D1 = sparse.COO.from_numpy(D1)
+# D2 = sparse.COO.from_numpy(D2)
+# D3 = sparse.COO.from_numpy(D3)
 print([D1.nbytes, D3.nbytes])
 
 if virtual_node:

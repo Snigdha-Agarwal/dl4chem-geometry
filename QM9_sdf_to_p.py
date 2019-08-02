@@ -4,10 +4,15 @@ import csv
 import numpy as np
 import pickle as pkl
 
-data = 'QM9'
 n_min = 2
-n_max = 9
-suppl = Chem.SDMolSupplier('./QM9_gdb9.sdf')
+# data = 'QM9'
+# n_max = 9
+# suppl = Chem.SDMolSupplier('./QM9_gdb9.sdf')
+
+data = 'Mine'
+n_max = 28
+suppl = Chem.SDMolSupplier('neural_net_gs_mols.sdf')
+
 
 smilist=[]
 mollist=[]

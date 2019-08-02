@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-import pickle as pkl
+# import pickle as pkl
+import dill as pkl
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
 import sys, gc, os
@@ -13,15 +14,15 @@ from test_tube.hpc import SlurmCluster
 
 def data_path():
     """Path to data depending on user launching the script"""
-    if getpass.getuser() == "mansimov":
-        if os.uname().nodename == "mansimov-desktop":
-            return "./data/"
-        else:
-            return "/misc/kcgscratch1/ChoGroup/mansimov/seokho_drive_datasets/"
-    if getpass.getuser() == "em3382":
-        return "/scratch/em3382/seokho_drive_datasets/"
-    else:
-        return "./"
+    # if getpass.getuser() == "mansimov":
+    #     if os.uname().nodename == "mansimov-desktop":
+    #         return "./data/"
+    #     else:
+    #         return "/misc/kcgscratch1/ChoGroup/mansimov/seokho_drive_datasets/"
+    # if getpass.getuser() == "em3382":
+    #     return "/scratch/em3382/seokho_drive_datasets/"
+    # else:
+    return "./"
 
 def train(args, exp=None):
 
@@ -52,6 +53,15 @@ def train(args, exp=None):
             dim_edge += 1
         nval = 3000
         ntst = 3000
+    elif args.data == 'Mine':
+        n_max = 28
+        dim_node = 24
+        dim_edge = 10
+        if args.virtual_node is True:
+            n_max += 1
+            dim_edge += 1
+        nval = 1 #6000 total = 12005
+        ntst = 1 #6000
 
     dim_h = args.dim_h
     dim_f = args.dim_f
@@ -124,7 +134,8 @@ def train(args, exp=None):
             molsup_tst = pkl.load(open('CSD_mol/CSD_molset_tst.p', 'rb'))
         molsup = None
     else:
-        ntrn = len(D5)-nval-ntst
+        # ntrn = len(D5)-nval-ntst
+        ntrn = 10
 
         [molsup, molsmi] = pkl.load(open(molset_fname,'rb'))
 
@@ -134,18 +145,34 @@ def train(args, exp=None):
         D4_trn = D4[:ntrn]
         D5_trn = D5[:ntrn]
         molsup_trn =molsup[:ntrn]
-        D1_val = D1[ntrn:ntrn+nval]
-        D2_val = D2[ntrn:ntrn+nval]
-        D3_val = D3[ntrn:ntrn+nval]
-        D4_val = D4[ntrn:ntrn+nval]
-        D5_val = D5[ntrn:ntrn+nval]
-        molsup_val =molsup[ntrn:ntrn+nval]
-        D1_tst = D1[ntrn+nval:ntrn+nval+ntst]
-        D2_tst = D2[ntrn+nval:ntrn+nval+ntst]
-        D3_tst = D3[ntrn+nval:ntrn+nval+ntst]
-        D4_tst = D4[ntrn+nval:ntrn+nval+ntst]
-        D5_tst = D5[ntrn+nval:ntrn+nval+ntst]
-        molsup_tst =molsup[ntrn+nval:ntrn+nval+ntst]
+
+
+        D1_tst =D1[:ntrn]
+        D2_tst =D2[:ntrn]
+        D3_tst =D3[:ntrn]
+        D4_tst =D4[:ntrn]
+        D5_tst =D5[:ntrn]
+        molsup_tst = molsup[:ntrn]
+
+        D1_val =D1[:ntrn]
+        D2_val =D2[:ntrn]
+        D3_val =D3[:ntrn]
+        D4_val =D4[:ntrn]
+        D5_val =D5[:ntrn]
+        molsup_val = molsup[:ntrn]
+
+        # D1_val = D1[ntrn:ntrn+nval]
+        # D2_val = D2[ntrn:ntrn+nval]
+        # D3_val = D3[ntrn:ntrn+nval]
+        # D4_val = D4[ntrn:ntrn+nval]
+        # D5_val = D5[ntrn:ntrn+nval]
+        # molsup_val =molsup[ntrn:ntrn+nval]
+        # D1_tst = D1[ntrn+nval:ntrn+nval+ntst]
+        # D2_tst = D2[ntrn+nval:ntrn+nval+ntst]
+        # D3_tst = D3[ntrn+nval:ntrn+nval+ntst]
+        # D4_tst = D4[ntrn+nval:ntrn+nval+ntst]
+        # D5_tst = D5[ntrn+nval:ntrn+nval+ntst]
+        # molsup_tst =molsup[ntrn+nval:ntrn+nval+ntst]
         print ('::: num train samples is ')
         print(D1_trn.shape, D3_trn.shape)
 
@@ -216,16 +243,11 @@ def search_train(args, *extra_args):
 def save_func(model):
     model.saver.save()
 
-def load_func(model, loaddir):
-    sess = tf.Session()
-    saver = tf.train.import_meta_graph('my_test_model-1000.meta')
-    saver.restore(model.sess, loaddir)
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train network')
 
-    parser.add_argument('--data', type=str, default='QM9', choices=['COD', 'QM9', 'CSD'])
+    parser.add_argument('--data', type=str, default='QM9', choices=['COD', 'QM9', 'CSD','Mine'])
     parser.add_argument('--ckptdir', type=str, default='./checkpoints/')
     parser.add_argument('--eventdir', type=str, default='./events/')
     parser.add_argument('--savepreddir', type=str, default=None,
