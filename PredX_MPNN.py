@@ -274,6 +274,7 @@ class Model(object):
         valaggr_mean = np.zeros(num_epochs)
         valaggr_std = np.zeros(num_epochs)
 
+        model_index = 0
         for epoch in range(num_epochs):
 
             [D1_t, D2_t, D3_t, D4_t, D5_t] = self._permutation([D1_t, D2_t, D3_t, D4_t, D5_t])
@@ -320,24 +321,25 @@ class Model(object):
                 exp_dict['training epoch id'] = epoch
                 exp_dict['train_score'] = np.mean(trnscores,0)
 
-            if (epoch+1)%100==0:
+            if (epoch)%10==0:
 
                 valscores_mean, valscores_std = self.test(D1_v, D2_v, D3_v, D4_v, D5_v, MS_v, \
                                                 load_path=None, tm_v=tm_val, debug=debug)
 
-                valaggr_mean[epoch] = valscores_mean
-                valaggr_std[epoch] = valscores_std
+                valaggr_mean[model_index] = valscores_mean
+                valaggr_std[model_index] = valscores_std
 
                 if not debug:
                     valid_summary_writer.add_scalar("val/valscores_mean", valscores_mean, epoch)
-                    valid_summary_writer.add_scalar("val/min_valscores_mean", np.min(valaggr_mean[0:epoch+1]), epoch)
+                    valid_summary_writer.add_scalar("val/min_valscores_mean", np.min(valaggr_mean[0:model_index+1]), epoch)
                     valid_summary_writer.add_scalar("val/valscores_std", valscores_std, epoch)
-                    valid_summary_writer.add_scalar("val/min_valscores_std", np.min(valaggr_std[0:epoch+1]), epoch)
+                    valid_summary_writer.add_scalar("val/min_valscores_std", np.min(valaggr_std[0:model_index+1]), epoch)
 
                 #print('::: training epoch id', epoch, ':: --- val : ', np.mean(valscores, 0), '--- min : ', np.min(valaggr[0:epoch+1]), flush=True)
                 #print('::: training epoch id', epoch, ':: --- val mean {} std {} : ', valscores_mean, valscores_std, '--- min mean {} std {} : ', np.min(valaggr_mean[0:epoch+1]), flush=True)
                 print ('::: training epoch id {} :: --- val mean={} , std={} ; --- best val mean={} , std={} '.format(\
-                        epoch, valscores_mean, valscores_std, np.min(valaggr_mean[0:epoch+1]), np.min(valaggr_std[0:epoch+1])))
+                        epoch, valscores_mean, valscores_std, np.min(valaggr_mean[0:model_index+1]),
+                        np.min(valaggr_std[0:model_index+1])))
                 if exp is not None:
                     exp_dict['val mean'] = valscores_mean
                     exp_dict['std'] = valscores_std
@@ -350,7 +352,7 @@ class Model(object):
                     self.saver.save( self.sess, save_path )
                 # keep track of the best model as well in the separate checkpoint
                 # it is done by copying the checkpoint
-                if valaggr_mean[epoch] == np.min(valaggr_mean[0:epoch+1]) and not debug:
+                if valaggr_mean[model_index] == np.min(valaggr_mean[0:model_index+1]) and not debug:
                     for ckpt_f in glob.glob(save_path + '*'):
                         model_name_split = ckpt_f.split('/')
                         model_path = '/'.join(model_name_split[:-1])
@@ -359,6 +361,8 @@ class Model(object):
                         full_best_model_path = os.path.join(model_path, best_model_name)
                         full_model_path = ckpt_f
                         shutil.copyfile(full_model_path, full_best_model_path)
+
+                model_index = model_index + 1
 
     def do_mask(self, vec, m):
         return tf.boolean_mask(vec, tf.reshape(tf.greater(m, tf.constant(0.5)), [self.n_max,]) )

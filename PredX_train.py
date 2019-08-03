@@ -42,8 +42,9 @@ def train(args, exp=None):
         if args.virtual_node is True:
             n_max += 1
             dim_edge += 1
-        nval = 5000
-        ntst = 5000
+        nval = 100
+        ntst = 100
+        ntrn = 500
     elif args.data == 'CSD':
         n_max = 50
         dim_node = 98
@@ -60,8 +61,9 @@ def train(args, exp=None):
         if args.virtual_node is True:
             n_max += 1
             dim_edge += 1
-        nval = 1 #6000 total = 12005
-        ntst = 1 #6000
+        nval = 100 #total = 12005
+        ntst = 100
+        ntrn = 500
 
     dim_h = args.dim_h
     dim_f = args.dim_f
@@ -121,9 +123,10 @@ def train(args, exp=None):
                 [D1, D2, D3, D4, D5] = pkl.load(open('CSD_mol/CSD_molvec_tst.p', 'rb'))
     else:
         [D1, D2, D3, D4, D5] = pkl.load(open(molvec_fname,'rb'))
-    D1 = D1.todense()
-    D2 = D2.todense()
-    D3 = D3.todense()
+    if args.data != 'Mine':
+      D1 = D1.todense()
+      D2 = D2.todense()
+      D3 = D3.todense()
 
     if args.data == 'CSD' and args.test is True:
         if args.use_val is True:
@@ -135,7 +138,7 @@ def train(args, exp=None):
         molsup = None
     else:
         # ntrn = len(D5)-nval-ntst
-        ntrn = 10
+        # ntrn = 10
 
         [molsup, molsmi] = pkl.load(open(molset_fname,'rb'))
 
@@ -147,32 +150,32 @@ def train(args, exp=None):
         molsup_trn =molsup[:ntrn]
 
 
-        D1_tst =D1[:ntrn]
-        D2_tst =D2[:ntrn]
-        D3_tst =D3[:ntrn]
-        D4_tst =D4[:ntrn]
-        D5_tst =D5[:ntrn]
-        molsup_tst = molsup[:ntrn]
+        # D1_tst =D1[:ntrn]
+        # D2_tst =D2[:ntrn]
+        # D3_tst =D3[:ntrn]
+        # D4_tst =D4[:ntrn]
+        # D5_tst =D5[:ntrn]
+        # molsup_tst = molsup[:ntrn]
 
-        D1_val =D1[:ntrn]
-        D2_val =D2[:ntrn]
-        D3_val =D3[:ntrn]
-        D4_val =D4[:ntrn]
-        D5_val =D5[:ntrn]
-        molsup_val = molsup[:ntrn]
+        # D1_val =D1[:ntrn]
+        # D2_val =D2[:ntrn]
+        # D3_val =D3[:ntrn]
+        # D4_val =D4[:ntrn]
+        # D5_val =D5[:ntrn]
+        # molsup_val = molsup[:ntrn]
 
-        # D1_val = D1[ntrn:ntrn+nval]
-        # D2_val = D2[ntrn:ntrn+nval]
-        # D3_val = D3[ntrn:ntrn+nval]
-        # D4_val = D4[ntrn:ntrn+nval]
-        # D5_val = D5[ntrn:ntrn+nval]
-        # molsup_val =molsup[ntrn:ntrn+nval]
-        # D1_tst = D1[ntrn+nval:ntrn+nval+ntst]
-        # D2_tst = D2[ntrn+nval:ntrn+nval+ntst]
-        # D3_tst = D3[ntrn+nval:ntrn+nval+ntst]
-        # D4_tst = D4[ntrn+nval:ntrn+nval+ntst]
-        # D5_tst = D5[ntrn+nval:ntrn+nval+ntst]
-        # molsup_tst =molsup[ntrn+nval:ntrn+nval+ntst]
+        D1_val = D1[ntrn:ntrn+nval]
+        D2_val = D2[ntrn:ntrn+nval]
+        D3_val = D3[ntrn:ntrn+nval]
+        D4_val = D4[ntrn:ntrn+nval]
+        D5_val = D5[ntrn:ntrn+nval]
+        molsup_val =molsup[ntrn:ntrn+nval]
+        D1_tst = D1[ntrn+nval:ntrn+nval+ntst]
+        D2_tst = D2[ntrn+nval:ntrn+nval+ntst]
+        D3_tst = D3[ntrn+nval:ntrn+nval+ntst]
+        D4_tst = D4[ntrn+nval:ntrn+nval+ntst]
+        D5_tst = D5[ntrn+nval:ntrn+nval+ntst]
+        molsup_tst =molsup[ntrn+nval:ntrn+nval+ntst]
         print ('::: num train samples is ')
         print(D1_trn.shape, D3_trn.shape)
 
