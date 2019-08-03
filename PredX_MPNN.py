@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import time
+
 import numpy as np
 import tensorflow as tf
 from rdkit import Chem
@@ -14,6 +16,9 @@ import copy
 import os
 import shutil
 import pickle as pkl
+
+from tf_summaries import TensorboardSummaries
+
 
 class Model(object):
 
@@ -235,7 +240,7 @@ class Model(object):
 
     def train(self, D1_t, D2_t, D3_t, D4_t, D5_t, MS_t, D1_v, D2_v, D3_v, D4_v, D5_v, MS_v,\
             load_path = None, save_path = None, train_event_path = None, valid_event_path = None,\
-            log_train_steps=100, tm_trn=None, tm_val=None, w_reg=1e-3, debug=False, exp=None):
+            log_train_steps=100, tm_trn=None, tm_val=None, w_reg=1e-3, debug=False, exp=None,epochs=100):
         if exp is not None:
             data_path = exp.get_data_path(exp.name, exp.version)
             save_path = os.path.join(data_path, 'checkpoints/model.ckpt')
@@ -246,6 +251,11 @@ class Model(object):
         if not debug:
             train_summary_writer = SummaryWriter(train_event_path)
             valid_summary_writer = SummaryWriter(valid_event_path)
+            tfboard = TensorboardSummaries('./tfboardSummary' + "/tflogs/" +
+                                           time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+            tfboard.add_variables(['rmsd-training-loss','rmsd-validation-loss'], 'loss_capture')
+
+            tfboard.init()
 
         # objective functions
         cost_KLDZ = tf.reduce_mean( tf.reduce_sum( self._KLD(self.postZ_mu, self.postZ_lsgms, self.priorZ_mu, self.priorZ_lsgms), [1, 2]) ) # posterior | prior
@@ -270,7 +280,7 @@ class Model(object):
         # training
         print('::: start training')
         # num_epochs = 2500
-        num_epochs = 1000
+        num_epochs = epochs
         valaggr_mean = np.zeros(num_epochs)
         valaggr_std = np.zeros(num_epochs)
 
@@ -340,6 +350,14 @@ class Model(object):
                 print ('::: training epoch id {} :: --- val mean={} , std={} ; --- best val mean={} , std={} '.format(\
                         epoch, valscores_mean, valscores_std, np.min(valaggr_mean[0:model_index+1]),
                         np.min(valaggr_std[0:model_index+1])))
+
+                #Training loss
+                trainscore_mean, trainscore_std = self.test(D1_t, D2_t, D3_t, D4_t, D5_t, MS_t, \
+                                                load_path=None, tm_v=tm_val, debug=debug)
+
+                tfboard.report(epoch,
+                               [trainscore_mean, valscores_mean], 'loss_capture')
+
                 if exp is not None:
                     exp_dict['val mean'] = valscores_mean
                     exp_dict['std'] = valscores_std

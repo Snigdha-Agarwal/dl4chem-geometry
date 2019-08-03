@@ -42,8 +42,8 @@ def train(args, exp=None):
         if args.virtual_node is True:
             n_max += 1
             dim_edge += 1
-        nval = 100
-        ntst = 100
+        nval = 100 #5000
+        ntst = 100 #5000
         ntrn = 500
     elif args.data == 'CSD':
         n_max = 50
@@ -232,7 +232,7 @@ def train(args, exp=None):
                         train_event_path=args.train_eventdir, valid_event_path=args.valid_eventdir, \
                         log_train_steps=args.log_train_steps, tm_trn=tm_trn, tm_val=tm_val, \
                         w_reg=args.w_reg, \
-                        debug=args.debug, exp=exp)
+                        debug=args.debug, exp=exp,epochs=args.epochs)
 
 def search_train(args, *extra_args):
     exp = Experiment(
@@ -280,6 +280,9 @@ if __name__ == '__main__':
     parser.add_argument('--dim_h', type=int, default=50, help='dimension of the hidden')
     parser.add_argument('--dim_f', type=int, default=100, help='dimension of the hidden')
     parser.add_argument('--mpnn_steps', type=int, default=5, help='number of mpnn steps')
+
+    parser.add_argument('--epochs',type=int,default=100,help='number of epochs to run training for')
+
 
     args = parser.parse_args()
 
