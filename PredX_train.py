@@ -63,7 +63,7 @@ def train(args, exp=None):
             dim_edge += 1
         nval = 100 #total = 12005
         ntst = 100
-        ntrn = 500
+        ntrn = 600
 
     dim_h = args.dim_h
     dim_f = args.dim_f

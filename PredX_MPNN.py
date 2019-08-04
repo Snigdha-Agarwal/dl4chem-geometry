@@ -5,7 +5,7 @@ import time
 import numpy as np
 import tensorflow as tf
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, Draw
 import copy
 from tensorboardX import SummaryWriter
 from tf_rmsd import tf_centroid, tf_centroid_masked, tf_kabsch_rmsd_masked, tf_kabsch_rmsd
@@ -181,7 +181,7 @@ class Model(object):
             valres=[]
             for j in range(D5_batch_pred.shape[0]):
                 ms_v_index = int(j / self.val_num_samples) + start_
-                res = self.getRMS(MS_v[ms_v_index], D5_batch_pred[j], useFF)
+                res = self. getRMS(MS_v[ms_v_index], D5_batch_pred[j], useFF)
                 valres.append(res)
 
             valres = np.array(valres)
@@ -208,6 +208,9 @@ class Model(object):
         return np.mean(valscores_mean), np.mean(valscores_std)
 
     def getRMS(self, prb_mol, ref_pos, useFF=False):
+        #prb_mol is original molecule and ref_pos are the new predicted postitions.
+        # Here a copy(ref_mol) of the original molecule is made. The conformer of that molecule is then changed to
+        # the predicted coordinates. prb_mol is then compared to ref_mol
 
         def optimizeWithFF(mol):
 
@@ -226,6 +229,12 @@ class Model(object):
         ref_mol = copy.deepcopy(prb_mol)
         ref_mol.RemoveConformer(0)
         ref_mol.AddConformer(ref_cf)
+
+        #creating images
+        img = Draw.MolsToGridImage([ref_mol,prb_mol], molsPerRow=2, subImgSize=(300, 300))
+        if not os.path.exists('./MoleculeImages/'):
+            os.makedirs('./MoleculeImages/')
+        img.save('./MoleculeImages/'+Chem.MolToSmiles(prb_mol)+'.png')
 
         if useFF:
             try:
@@ -253,7 +262,7 @@ class Model(object):
             valid_summary_writer = SummaryWriter(valid_event_path)
             tfboard = TensorboardSummaries('./tfboardSummary' + "/tflogs/" +
                                            time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
-            tfboard.add_variables(['rmsd-training-loss','rmsd-validation-loss'], 'loss_capture')
+            tfboard.add_variables(['rmsd-validation-loss'], 'loss_capture')
 
             tfboard.init()
 
@@ -351,12 +360,12 @@ class Model(object):
                         epoch, valscores_mean, valscores_std, np.min(valaggr_mean[0:model_index+1]),
                         np.min(valaggr_std[0:model_index+1])))
 
-                #Training loss
-                trainscore_mean, trainscore_std = self.test(D1_t, D2_t, D3_t, D4_t, D5_t, MS_t, \
-                                                load_path=None, tm_v=tm_val, debug=debug)
+                # #Training loss
+                # trainscore_mean, trainscore_std = self.test(D1_t, D2_t, D3_t, D4_t, D5_t, MS_t, \
+                #                                 load_path=None, tm_v=tm_val, debug=debug)
 
                 tfboard.report(epoch,
-                               [trainscore_mean, valscores_mean], 'loss_capture')
+                               [valscores_mean], 'loss_capture')
 
                 if exp is not None:
                     exp_dict['val mean'] = valscores_mean
