@@ -231,10 +231,16 @@ class Model(object):
         ref_mol.AddConformer(ref_cf)
 
         #creating images
-        img = Draw.MolsToGridImage([ref_mol,prb_mol], molsPerRow=2, subImgSize=(300, 300))
-        if not os.path.exists('./MoleculeImages/'):
-            os.makedirs('./MoleculeImages/')
-        img.save('./MoleculeImages/'+Chem.MolToSmiles(prb_mol)+'.png')
+        # img = Draw.MolsToGridImage([ref_mol,prb_mol], molsPerRow=2, subImgSize=(300, 300))
+        # if not os.path.exists('./MoleculeImages/'):
+        #     os.makedirs('./MoleculeImages/')
+        # img.save('./MoleculeImages/'+Chem.MolToInchiKey(prb_mol)+'.png')
+
+        #Printing xyz values against each other
+        if not os.path.exists('./MoleculeCoords/'):
+            os.makedirs('./MoleculeCoords/')
+        print(Chem.MolToMolBlock(prb_mol), file=open('./MoleculeCoords/'+Chem.MolToInchiKey(prb_mol) + '.txt', 'w+'))
+        print(Chem.MolToMolBlock(ref_mol), file=open('./MoleculeCoords/' + Chem.MolToInchiKey(prb_mol) + '.txt', 'a'))
 
         if useFF:
             try:

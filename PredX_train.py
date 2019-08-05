@@ -61,9 +61,9 @@ def train(args, exp=None):
         if args.virtual_node is True:
             n_max += 1
             dim_edge += 1
-        nval = 100 #total = 12005
-        ntst = 100
-        ntrn = 600
+        nval = 2 #total = 12005
+        ntst = 2
+        ntrn = 2
 
     dim_h = args.dim_h
     dim_f = args.dim_f
