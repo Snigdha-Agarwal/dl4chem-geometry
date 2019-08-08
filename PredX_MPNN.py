@@ -7,6 +7,8 @@ import tensorflow as tf
 from rdkit import Chem
 from rdkit.Chem import AllChem, Draw
 import copy
+
+from rdkit.Chem.rdmolfiles import PDBWriter
 from tensorboardX import SummaryWriter
 from tf_rmsd import tf_centroid, tf_centroid_masked, tf_kabsch_rmsd_masked, tf_kabsch_rmsd
 import pdb
@@ -236,11 +238,24 @@ class Model(object):
         #     os.makedirs('./MoleculeImages/')
         # img.save('./MoleculeImages/'+Chem.MolToInchiKey(prb_mol)+'.png')
 
-        #Printing xyz values against each other
-        if not os.path.exists('./MoleculeCoords/'):
-            os.makedirs('./MoleculeCoords/')
-        print(Chem.MolToMolBlock(prb_mol), file=open('./MoleculeCoords/'+Chem.MolToInchiKey(prb_mol) + '.txt', 'w+'))
-        print(Chem.MolToMolBlock(ref_mol), file=open('./MoleculeCoords/' + Chem.MolToInchiKey(prb_mol) + '.txt', 'a'))
+        # #Printing xyz values against each other
+        # if not os.path.exists('./MoleculeCoords/'):
+        #     os.makedirs('./MoleculeCoords/')
+        # print(Chem.MolToMolBlock(prb_mol), file=open('./MoleculeCoords/'+Chem.MolToInchiKey(prb_mol) + '.txt', 'w+'))
+        # print(Chem.MolToMolBlock(ref_mol), file=open('./MoleculeCoords/' + Chem.MolToInchiKey(prb_mol) + '.txt', 'a'))
+
+        #Creating PDB Files
+        path = './PDBFiles/'+Chem.MolToInchiKey(prb_mol)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        #original mol
+        mol_writer = PDBWriter(os.path.join(path + "/original.pdb"))
+        mol_writer.write(prb_mol)
+        mol_writer.close()
+        #predicted mol
+        mol_writer = PDBWriter(os.path.join(path +  "/predicted.pdb"))
+        mol_writer.write(ref_mol)
+        mol_writer.close()
 
         if useFF:
             try:
