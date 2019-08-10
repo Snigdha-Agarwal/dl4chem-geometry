@@ -121,7 +121,7 @@ class Model(object):
 
 
     def test(self, D1_v, D2_v, D3_v, D4_v, D5_v, MS_v, load_path = None, \
-                tm_v=None, debug=False, savepred_path=None, savepermol=False, useFF=False):
+                tm_v=None, debug=False, savepred_path=None, savepermol=False, useFF=False, pdb_path = None):
         if load_path is not None:
             self.saver.restore( self.sess, load_path )
 
@@ -183,7 +183,7 @@ class Model(object):
             valres=[]
             for j in range(D5_batch_pred.shape[0]):
                 ms_v_index = int(j / self.val_num_samples) + start_
-                res = self. getRMS(MS_v[ms_v_index], D5_batch_pred[j], useFF)
+                res = self. getRMS(MS_v[ms_v_index], D5_batch_pred[j],pdb_path, useFF)
                 valres.append(res)
 
             valres = np.array(valres)
@@ -209,7 +209,7 @@ class Model(object):
 
         return np.mean(valscores_mean), np.mean(valscores_std)
 
-    def getRMS(self, prb_mol, ref_pos, useFF=False):
+    def getRMS(self, prb_mol, ref_pos,pdb_path, useFF=False):
         #prb_mol is original molecule and ref_pos are the new predicted postitions.
         # Here a copy(ref_mol) of the original molecule is made. The conformer of that molecule is then changed to
         # the predicted coordinates. prb_mol is then compared to ref_mol
@@ -245,7 +245,7 @@ class Model(object):
         # print(Chem.MolToMolBlock(ref_mol), file=open('./MoleculeCoords/' + Chem.MolToInchiKey(prb_mol) + '.txt', 'a'))
 
         #Creating PDB Files
-        path = './PDBFiles/'+Chem.MolToInchiKey(prb_mol)
+        path = pdb_path+Chem.MolToInchiKey(prb_mol)
         if not os.path.exists(path):
             os.makedirs(path)
         #original mol
@@ -270,7 +270,7 @@ class Model(object):
 
     def train(self, D1_t, D2_t, D3_t, D4_t, D5_t, MS_t, D1_v, D2_v, D3_v, D4_v, D5_v, MS_v,\
             load_path = None, save_path = None, train_event_path = None, valid_event_path = None,\
-            log_train_steps=100, tm_trn=None, tm_val=None, w_reg=1e-3, debug=False, exp=None,epochs=100):
+            log_train_steps=100, tm_trn=None, tm_val=None, w_reg=1e-3, debug=False, exp=None,epochs=100, pdb_path = None):
         if exp is not None:
             data_path = exp.get_data_path(exp.name, exp.version)
             save_path = os.path.join(data_path, 'checkpoints/model.ckpt')
@@ -364,7 +364,7 @@ class Model(object):
             if (epoch)%10==0:
 
                 valscores_mean, valscores_std = self.test(D1_v, D2_v, D3_v, D4_v, D5_v, MS_v, \
-                                                load_path=None, tm_v=tm_val, debug=debug)
+                                                load_path=None, tm_v=tm_val, debug=debug, pdb_path = pdb_path)
 
                 valaggr_mean[model_index] = valscores_mean
                 valaggr_std[model_index] = valscores_std

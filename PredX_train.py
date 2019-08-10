@@ -61,9 +61,9 @@ def train(args, exp=None):
         if args.virtual_node is True:
             n_max += 1
             dim_edge += 1
-        nval = 2 #total = 12005
-        ntst = 2
-        ntrn = 2
+        nval = args.val_size #total = 12005
+        ntst = args.test_size
+        ntrn = args.train_size
 
     dim_h = args.dim_h
     dim_f = args.dim_f
@@ -232,7 +232,7 @@ def train(args, exp=None):
                         train_event_path=args.train_eventdir, valid_event_path=args.valid_eventdir, \
                         log_train_steps=args.log_train_steps, tm_trn=tm_trn, tm_val=tm_val, \
                         w_reg=args.w_reg, \
-                        debug=args.debug, exp=exp,epochs=args.epochs)
+                        debug=args.debug, exp=exp, epochs=args.epochs, pdb_path = args.pdb_file_path)
 
 def search_train(args, *extra_args):
     exp = Experiment(
@@ -282,7 +282,10 @@ if __name__ == '__main__':
     parser.add_argument('--mpnn_steps', type=int, default=5, help='number of mpnn steps')
 
     parser.add_argument('--epochs',type=int,default=100,help='number of epochs to run training for')
-
+    parser.add_argument('--train_size', type=int, help='number of samples in training set')
+    parser.add_argument('--val_size', type=int, help='number of samples in validation set')
+    parser.add_argument('--test_size', type=int, help='number of samples in test set')
+    parser.add_argument('--pdb_file_path', type=str, help='Path to store PDB files')
 
     args = parser.parse_args()
 
