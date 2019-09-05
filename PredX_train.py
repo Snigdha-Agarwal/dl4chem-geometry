@@ -207,8 +207,8 @@ def train(args, exp=None):
                         virtual_node=args.virtual_node, seed=args.seed, \
                         refine_steps=args.refine_steps, refine_mom=args.refine_mom, \
                         prior_T=args.prior_T)
-    #if args.loaddir != None:
-    #    model.saver.restore(model.sess, args.loaddir)
+    if args.loaddir != None:
+       model.saver.restore(model.sess, args.loaddir)
 
     if args.savepermol:
         args.savepreddir = os.path.join(args.savepreddir, args.data, "_val_" if args.use_val else "_test_")
@@ -221,6 +221,11 @@ def train(args, exp=None):
                 model.test(D1_val, D2_val, D3_val, D4_val, D5_val, molsup_val, \
                             load_path=args.loaddir, tm_v=tm_val, debug=args.debug, \
                             savepred_path=args.savepreddir, savepermol=args.savepermol, useFF=args.useFF)
+            if args.use_train:
+                model.test(D1_trn, D2_trn, D3_trn, D4_trn, D5_trn, molsup_trn, \
+                            load_path=args.loaddir, tm_v=tm_val, debug=args.debug, \
+                            savepred_path=args.savepreddir, savepermol=args.savepermol, useFF=args.useFF,
+                           pdb_path = args.pdb_file_path)
             else:
                 model.test(D1_tst, D2_tst, D3_tst, D4_tst, D5_tst, molsup_tst, \
                             load_path=args.loaddir, tm_v=tm_tst, debug=args.debug, \
@@ -263,6 +268,7 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true', help='debug mode')
     parser.add_argument('--test', action='store_true', help='test mode')
     parser.add_argument('--use_val', action='store_true', help='use validation set')
+    parser.add_argument('--use_train', action='store_true', help='use training set')
     parser.add_argument('--seed', type=int, default=1334, help='random seed for experiments')
     parser.add_argument('--batch_size', type=int, default=20, help='batch size')
     parser.add_argument('--val_num_samples', type=int, default=10,
